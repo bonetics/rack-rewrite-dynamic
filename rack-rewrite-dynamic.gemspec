@@ -14,10 +14,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency 'rack-rewrite'
   gem.add_dependency 'activesupport'
-  #gem.add_dependency 'activerecord'
-  #gem.add_dependency 'friendly_id'
   gem.add_development_dependency 'rack'
-  #gem.add_development_dependency 'sqlite3'
   gem.add_development_dependency "rspec"
 
   gem.files         = `git ls-files`.split($/)
