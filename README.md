@@ -32,9 +32,7 @@ Or install it yourself as:
 
 ## Usage
 
-Rack-rewrite-dynamic currently assumes its beeing used as a middleware
-in a rails project. The rails dependency may dissapear in the near
-future, but it is required for now. It also assumes you have a Slug
+Rack-rewrite-dynamic currently assumes its beeing used as a middleware. It also assumes you have a Slug
 model using the [friendly_id](https://github.com/norman/friendly_id)
 gem. The slug model should have a polymorphic association to the models
 that are used for SEO urls.
@@ -90,6 +88,36 @@ resources :cars
 ```
 defined as usual and use the filter attributes on the index page.
 
+### Custom rewrites
+
+If the two built in rewrites do not fit your need, you can create your
+own. You can use one of our own rewriters as a template.
+The only requirement is to have a perform instance method that
+receives a match object of the url and a rack_env object containing the
+request information from the rack environment. To bring in some
+functionality that should be usefull include our base module.
+
+```ruby
+class MyRewriter
+  include Rack::Rewrite::Dynamic::Base
+
+  def perform(match, rack_env)
+    # some awesome rewriting
+  end
+end
+```
+
+You can then pass them in as an argument to the rewrite method.
+
+```ruby
+config.middleware.insert_after "ActiveRecord::QueryCache", 'Rack::Rewrite' do |base|
+  rewriter = 'Rack::Rewrite::Dynamic::Rewrites'.constantize.new do
+    rewrite {option: 'value'}, MyRewriter
+  end
+  rewriter.apply_rewrites(base)
+end
+```
+
 ### Configuration
 
 If you wish to use a different slug class you may pass it in as an
@@ -98,8 +126,7 @@ argument when defining the rewrite.
 ```ruby
 config.middleware.insert_after "ActiveRecord::QueryCache", 'Rack::Rewrite' do |base|
   rewriter = 'Rack::Rewrite::Dynamic::Rewrites'.constantize.new do
-    rewrite url_parts: [{'Category' => 'slug', 'IceCream' => 'slug'}],
-slug_name: 'AnotherSlug'
+    rewrite url_parts: [{'Category' => 'slug', 'IceCream' => 'slug'}], slug_name: 'AnotherSlug'
   end
   rewriter.apply_rewrites(base)
 end
@@ -119,16 +146,11 @@ end
 
 config.middleware.insert_after "ActiveRecord::QueryCache", 'Rack::Rewrite' do |base|
   rewriter = 'Rack::Rewrite::Dynamic::Rewrites'.constantize.new do
-    rewrite url_parts: [{'Category' => 'slug', 'IceCream' => 'slug'}],
-route_generator_name: 'TestGenerator'
+    rewrite url_parts: [{'Category' => 'slug', 'IceCream' => 'slug'}], route_generator_name: 'TestGenerator'
   end
   rewriter.apply_rewrites(base)
 end
 ```
-
-
-
-
 
 
 ## Contributing
