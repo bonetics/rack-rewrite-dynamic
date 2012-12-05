@@ -11,7 +11,7 @@ Consider the following requirements:
 /resources_name?color_ids[]=42&color_ids[]=43&category_ids[]=42
 
 You could try to setup custom routing using
-[rack-rewrite arbitraty rewriting feature](https://github.com/jtrupiano/rack-rewrite#arbitrary-rewriting).
+[rack-rewrite arbitrary rewriting feature](https://github.com/jtrupiano/rack-rewrite#arbitrary-rewriting).
 Rack-rewrite-dynamic wraps these use cases and provides an easy way to
 create your own if you need to do so.
 
@@ -32,7 +32,7 @@ Or install it yourself as:
 
 ## Usage
 
-Rack-rewrite-dynamic currently assumes its beeing used as a middleware. It also assumes you have a Slug
+Rack-rewrite-dynamic currently assumes its being used as a middleware. It also assumes you have a Slug
 model using the [friendly_id](https://github.com/norman/friendly_id)
 gem. The slug model should have a polymorphic association to the models
 that are used for SEO urls.
@@ -95,7 +95,7 @@ own. You can use one of our own rewriters as a template.
 The only requirement is to have a perform instance method that
 receives a match object of the url and a rack_env object containing the
 request information from the rack environment. To bring in some
-functionality that should be usefull include our base module.
+functionality that should be useful include our base module.
 
 ```ruby
 class MyRewriter
