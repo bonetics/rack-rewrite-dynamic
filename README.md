@@ -87,6 +87,46 @@ resources :cars
 ```
 defined as usual and use the filter attributes on the index page.
 
+### Configuration
+
+If you wish to use a different slug class you may pass it in as an
+argument when defining the rewrite.
+
+```ruby
+config.middleware.insert_after "ActiveRecord::QueryCache", 'Rack::Rewrite' do |base|
+  rewriter = 'Rack::Rewrite::Dynamic::Rewrites'.constantize.new do
+    rewrite url_parts: [{'Category' => 'slug', 'IceCream' => 'slug'}],
+slug_name: 'AnotherSlug'
+  end
+  rewriter.apply_rewrites(base)
+end
+```
+
+By default the rewrites assume you have a rails application to generate
+the routing. If you with to have a custom route generator, you can
+supply it when defining the rewrite. It needs to respond to a
+route_for(slug) message and return a string representing the url.
+
+```ruby
+class TestGenerator
+  def self.route_for slug
+    'some/path'
+  end
+end
+
+config.middleware.insert_after "ActiveRecord::QueryCache", 'Rack::Rewrite' do |base|
+  rewriter = 'Rack::Rewrite::Dynamic::Rewrites'.constantize.new do
+    rewrite url_parts: [{'Category' => 'slug', 'IceCream' => 'slug'}],
+route_generator_name: 'TestGenerator'
+  end
+  rewriter.apply_rewrites(base)
+end
+```
+
+
+
+
+
 
 ## Contributing
 
