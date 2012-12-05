@@ -1,3 +1,4 @@
+require 'rack/rewrite/dynamic/rails_route_generator'
 require 'rack/rewrite/dynamic/base'
 require 'rack/rewrite/dynamic/filter_rewrite'
 require 'rack/rewrite/dynamic/rewrite'

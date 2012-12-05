@@ -6,7 +6,7 @@ module Rack
         def initialize(opts)
           @opts = opts
           @opts[:slug_name] ||= 'Slug'
-          @opts[:route_generator_name] ||= 'Rack::Rewrite::Dynamic::RailsRouteGenrator'
+          @opts[:route_generator_name] ||= 'Rack::Rewrite::Dynamic::RailsRouteGenerator'
         end
 
         def apply_rewrite(base)
