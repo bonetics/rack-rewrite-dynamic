@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["olahmichal@gmail.com"]
   gem.description   = %q{Dynamic SEO urls}
   gem.summary       = %q{SEO urls based on slugs}
-  gem.homepage      = ""
+  gem.homepage      = "https://github.com/bonetics/rack-rewrite-dynamic"
 
   gem.add_dependency 'rack-rewrite'
   gem.add_dependency 'activesupport'
