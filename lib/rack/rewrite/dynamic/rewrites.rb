@@ -13,7 +13,7 @@ module Rack
         def rewrite_filter(opts = {})
           rewrite(opts, FilterRewrite)
         end
-        def rewrite(opts = {}, rewrite_klass = Rewrite)
+        def rewrite(opts = {}, rewrite_klass = Rewrite, &block)
           @rewrites ||= []
           @rewrites << rewrite_klass.new(opts)
         end

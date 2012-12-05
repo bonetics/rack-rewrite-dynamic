@@ -5,6 +5,8 @@ module Rack
         attr_reader :opts
         def initialize(opts)
           @opts = opts
+          @opts[:slug_name] ||= 'Slug'
+          @opts[:route_generator_name] ||= 'Rack::Rewrite::Dynamic::RailsRouteGenrator'
         end
 
         def apply_rewrite(base)
@@ -18,13 +20,19 @@ module Rack
           slug if slug && slug[:sluggable_type] == slug_type
         end
         def find_sluggable(friendly_id)
-          Slug.find(friendly_id)
+          slug_klass.find(friendly_id)
         rescue ActiveRecord::RecordNotFound
-          nil
+          # :)
+        end
+        def slug_klass
+          @slug_klass ||= @opts[:slug_name].constantize
+        end
+        def route_generator_klass
+          @route_generator_klass ||= @opts[:route_generator_name].constantize
         end
         def slug_path_if_present(slug, rack_env)
           if slug
-            Rails.application.routes.url_helpers.send("#{slug[:sluggable_type].underscore}_path", slug[:sluggable_id])
+            route_generator_klass.route_for slug
           else
             rack_env['REQUEST_URI'] || rack_env['PATH_INFO']
           end
