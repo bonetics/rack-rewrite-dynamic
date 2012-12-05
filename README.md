@@ -35,12 +35,15 @@ Or install it yourself as:
 Rack-rewrite-dynamic currently assumes its beeing used as a middleware
 in a rails project. The rails dependency may dissapear in the near
 future, but it is required for now. It also assumes you have a Slug
-model using the [friendly_id](https://github.com/norman/friendly_id) gem.
+model using the [friendly_id](https://github.com/norman/friendly_id)
+gem. The slug model should have a polymorphic association to the models
+that are used for SEO urls.
 
 ```ruby
 class Slug < ActiveRecord::Base
   extend FriendlyId
   friendly_id :content, use: [:slugged, :history]
+  belongs_to :sluggable, :polymorphic => true
 end
 ```
 
