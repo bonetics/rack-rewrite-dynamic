@@ -19,6 +19,10 @@ module Rack
           slug = find_sluggable(slug_name)
           slug if slug && slug[:sluggable_type] == slug_type
         end
+        def scoped_slug_type?(slug_name, slug_type, prev_slug)
+          association_name = slug_type.downcase.pluralize
+          prev_slug.sluggable.send(association_name).find(slug_name) if prev_slug
+        end
         def find_sluggable(friendly_id)
           slug_klass.find(friendly_id)
         rescue ActiveRecord::RecordNotFound

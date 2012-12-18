@@ -25,9 +25,12 @@ module Rack
         end
 
         def find_url(url_parts, match, rack_env)
+          scope_slug = nil
           slugs = url_parts.each_with_index.map do |url_part, index|
             if url_part[1] == 'slug'
-              slug_type?(match[index+1], url_part[0])
+              scope_slug = slug_type?(match[index+1], url_part[0])
+            elsif url_part[1] == 'scoped_slug'
+              scope_slug = scoped_slug_type?(match[index+1], url_part[0], scope_slug)
             else
               'static'
             end
