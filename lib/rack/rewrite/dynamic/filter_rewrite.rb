@@ -29,15 +29,22 @@ module Rack
 
         private
           def build_match_string
-            match_string = '^'
-            match_string << "#{@opts[:prefix]}" if @opts[:prefix]
-            match_string << '\/' + "#{filter_string}"
-            match_string << "#{@opts[:separator]}#{@opts[:suffix]}" if @opts[:suffix] && @opts[:separator]
-            match_string << "\/?$"
+            match_string = '^\/'
+            match_string << @opts[:url_parts].map do |url_part|
+              if url_part.keys.include?(:prefix) || url_part.keys.include?(:suffix)
+                "#{url_part[:prefix]}#{filter_string}#{url_part[:suffix]}"
+              elsif url_part.keys.include?(:groups)
+                filter_string
+              end
+            end.join(suburl_separator)
+
             match_string
           end
           def filter_string
             '([^\/]+)'
+          end
+          def suburl_separator
+            '\/'
           end
       end
     end
