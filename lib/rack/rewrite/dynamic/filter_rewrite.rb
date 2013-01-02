@@ -8,37 +8,31 @@ module Rack
 
         def perform(match, rack_env)
           if !(match[1] =~ /assets/)
-            filter_params = {}
-
-            @opts[:url_parts].each_with_index.map do |url_part, index|
+            filter_parts = @opts[:url_parts].each_with_index.map do |url_part, index|
               if url_part.keys.include?(:static)
                 # :)
               elsif url_part.keys.include?(:prefix) || url_part.keys.include?(:suffix)
-                filter_parts = match[index+1].split(url_part[:separator])
-
-                slugs = filter_parts.map do |candidate|
-                  find_sluggable(candidate)
-                end
-                if !slugs.include?(nil)
-                  slugs.each do |s|
-                    add_filter_param(filter_params, s)
-                  end
-                end
+                match[index+1].split(url_part[:separator])
               elsif url_part.keys.include?(:groups)
                 slug_groups = match[index+1].match(slug_group_matcher(url_part[:groups]))[1..-1]
-                filter_parts = slug_groups.to_a.each_with_index.map { |slug_group, i| slug_group.split(url_part[:groups][i][:separator]) }.flatten
+                slug_groups.to_a.each_with_index.map { |slug_group, i| slug_group.split(url_part[:groups][i][:separator]) }.flatten
+              end
+            end.flatten.compact
 
-                slugs = filter_parts.map do |candidate|
-                  find_sluggable(candidate)
-                end
-                if !slugs.include?(nil)
-                  slugs.each do |s|
-                    add_filter_param(filter_params, s)
-                  end
+            if filter_parts.length > 0
+              slugs = filter_parts.map do |candidate|
+                find_sluggable(candidate)
+              end
+
+              filter_params = {}
+              if !slugs.include?(nil)
+                slugs.each do |s|
+                  add_filter_param(filter_params, s)
                 end
               end
+
+              return "/#{@opts[:target]}?#{filter_params.to_query}" if filter_params.length > 0
             end
-            return "/#{@opts[:target]}?#{filter_params.to_query}" if filter_params.length > 0
           else
             rack_env['REQUEST_URI'] || rack_env['PATH_INFO']
           end
