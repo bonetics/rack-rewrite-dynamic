@@ -59,6 +59,38 @@ describe Rack::Rewrite::Dynamic::FilterRewrite do
       subject.perform(match, rack_env).should be_nil
     end
 
+    context 'static part' do
+      let(:opts) do
+        {
+          target: 'products',
+          url_parts: [{static: 'fashion-items'},
+                      {suffix: '', separator: '-'},
+                      {
+            groups: [
+              {suffix: '-colored-', separator: '-'},
+              {prefix: 'from-', separator: '-or-'}
+            ]
+          }
+        ]
+        }
+      end
+      let(:match) { ['', 'fashion-items', 'tops-shirts', 'blue-red-darkgray-colored-from-nike-or-adidas'] }
+      let(:rack_env) { { 'REQUEST_URI' => 'some/path' } }
+
+
+      it 'should perform the rewrite' do
+        subject.stub(:find_sluggable).with('tops'){ { sluggable_type: 'product_category', sluggable_id: 42 } }
+        subject.stub(:find_sluggable).with('shirts'){ { sluggable_type: 'product_category', sluggable_id: 43 } }
+        subject.stub(:find_sluggable).with('blue'){ { sluggable_type: 'color', sluggable_id: 42 } }
+        subject.stub(:find_sluggable).with('red'){ { sluggable_type: 'color', sluggable_id: 43 } }
+        subject.stub(:find_sluggable).with('darkgray'){ { sluggable_type: 'color', sluggable_id: 44 } }
+        subject.stub(:find_sluggable).with('nike'){ { sluggable_type: 'brand', sluggable_id: 42 } }
+        subject.stub(:find_sluggable).with('adidas'){ { sluggable_type: 'brand', sluggable_id: 43 } }
+
+        subject.perform(match, rack_env).should eq('/products?brand_ids%5B%5D=42&brand_ids%5B%5D=43&color_ids%5B%5D=42&color_ids%5B%5D=43&color_ids%5B%5D=44&product_category_ids%5B%5D=42&product_category_ids%5B%5D=43')
+      end
+    end
+
   end
 
 end

@@ -10,11 +10,20 @@ module Rack
           if !(match[1] =~ /assets/)
             filter_params = {}
 
-            @opts[:url_parts].each_with_index do |url_part, index|
-              if url_part.keys.include?(:prefix) || url_part.keys.include?(:suffix)
-                slug_candidate = match[index+1]
-                slug = find_sluggable(slug_candidate)
-                add_filter_param(filter_params, slug) if slug
+            @opts[:url_parts].each_with_index.map do |url_part, index|
+              if url_part.keys.include?(:static)
+                # :)
+              elsif url_part.keys.include?(:prefix) || url_part.keys.include?(:suffix)
+                filter_parts = match[index+1].split(url_part[:separator])
+
+                slugs = filter_parts.map do |candidate|
+                  find_sluggable(candidate)
+                end
+                if !slugs.include?(nil)
+                  slugs.each do |s|
+                    add_filter_param(filter_params, s)
+                  end
+                end
               elsif url_part.keys.include?(:groups)
                 slug_groups = match[index+1].match(slug_group_matcher(url_part[:groups]))[1..-1]
                 filter_parts = slug_groups.to_a.each_with_index.map { |slug_group, i| slug_group.split(url_part[:groups][i][:separator]) }.flatten
@@ -50,7 +59,9 @@ module Rack
           def build_match_string
             match_string = '^\/'
             match_string << @opts[:url_parts].map do |url_part|
-              if url_part.keys.include?(:prefix) || url_part.keys.include?(:suffix)
+              if url_part.keys.include?(:static)
+                url_part[:static]
+              elsif url_part.keys.include?(:prefix) || url_part.keys.include?(:suffix)
                 "#{url_part[:prefix]}#{filter_string}#{url_part[:suffix]}"
               elsif url_part.keys.include?(:groups)
                 filter_string
