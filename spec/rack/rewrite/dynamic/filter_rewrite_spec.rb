@@ -13,32 +13,39 @@ describe Rack::Rewrite::Dynamic::FilterRewrite do
     end
   end
 
-  let(:opts) do
-    {
-      target: 'outfits',
-      url_parts: [{suffix: '-outfits'},
-                  {
-                    groups: [
-                              {suffix: '-colored-', separator: '-'},
-                              {prefix: 'from-', separator: '-and-'}
-                            ]
-                  }
-                 ]
-    }
-  end
-  subject { Rack::Rewrite::Dynamic::FilterRewrite.new(opts) }
   let(:base) { mock(:base) }
+  let(:rack_env) { { 'REQUEST_URI' => 'some/path' } }
 
+  let(:opts) { {} }
+  subject { Rack::Rewrite::Dynamic::FilterRewrite.new(opts) }
   its(:opts) { should eq(opts) }
 
-  it 'should apply rewrite' do
-    base.should_receive(:rewrite).with(/^\/([^\/]+)-outfits\/([^\/]+)/, anything)
-    subject.apply_rewrite(base)
+  it 'should return the original request if assets' do
+    match = ['', 'assets']
+    subject.perform(match, rack_env).should eq('some/path')
   end
 
-  describe '#perform' do
-    let(:match) { ['', 'business', 'red-darkblue-colored-from-nike-and-red-mountain'] }
-    let(:rack_env) { { 'REQUEST_URI' => 'some/path' } }
+  context 'handle SEO urls like /slug1-slug2-outfits/red-green-colored-from-nike-and-red-mountain' do
+    let(:opts) do
+      {
+        target: 'outfits',
+        url_parts: [{suffix: 'outfits', separator: '-'},
+                    {
+                      groups: [
+                                {suffix: '-colored', separator: '-'},
+                                {prefix: 'from-', separator: '-and-'}
+                              ]
+                    }
+                   ]
+      }
+    end
+    let(:match) { ['', 'business-', 'red-darkblue', 'nike-and-red-mountain'] }
+
+    it 'should apply rewrite' do
+      base.should_receive(:rewrite).with(/^\/(?<slug_groups>[^\/]+)?-?outfits\/?((?<slug_groups>[^\/]+)-colored)?-?(from-(?<slug_groups>[^\/]+))?-?/, anything)
+      subject.apply_rewrite(base)
+    end
+
     it 'should perform rewrite' do
       subject.stub(:find_sluggable).with('business'){ { sluggable_type: 'outfit_category', sluggable_id: 42 } }
       subject.stub(:find_sluggable).with('red'){ { sluggable_type: 'color', sluggable_id: 42 } }
@@ -49,49 +56,54 @@ describe Rack::Rewrite::Dynamic::FilterRewrite do
       subject.perform(match, rack_env).should eq('/outfits?brand_ids%5B%5D=42&brand_ids%5B%5D=43&color_ids%5B%5D=42&color_ids%5B%5D=43&outfit_category_ids%5B%5D=42')
     end
 
-    it 'should return the original request if assets' do
-      match[1] = 'assets'
-      subject.perform(match, rack_env).should eq('some/path')
-    end
-
     it 'should not return path if slug wasn not found' do
       subject.stub(:find_sluggable)
-      subject.perform(match, rack_env).should be_nil
+      subject.perform(match, rack_env).should eq('some/path')
     end
-
-    context 'static part' do
-      let(:opts) do
-        {
-          target: 'products',
-          url_parts: [{static: 'fashion-items'},
-                      {suffix: '', separator: '-'},
-                      {
-            groups: [
-              {suffix: '-colored-', separator: '-'},
-              {prefix: 'from-', separator: '-or-'}
-            ]
-          }
-        ]
-        }
-      end
-      let(:match) { ['', 'fashion-items', 'tops-shirts', 'blue-red-darkgray-colored-from-nike-or-adidas'] }
-      let(:rack_env) { { 'REQUEST_URI' => 'some/path' } }
-
-
-      it 'should perform the rewrite' do
-        subject.stub(:find_sluggable).with('tops'){ { sluggable_type: 'product_category', sluggable_id: 42 } }
-        subject.stub(:find_sluggable).with('shirts'){ { sluggable_type: 'product_category', sluggable_id: 43 } }
-        subject.stub(:find_sluggable).with('blue'){ { sluggable_type: 'color', sluggable_id: 42 } }
-        subject.stub(:find_sluggable).with('red'){ { sluggable_type: 'color', sluggable_id: 43 } }
-        subject.stub(:find_sluggable).with('darkgray'){ { sluggable_type: 'color', sluggable_id: 44 } }
-        subject.stub(:find_sluggable).with('nike'){ { sluggable_type: 'brand', sluggable_id: 42 } }
-        subject.stub(:find_sluggable).with('adidas'){ { sluggable_type: 'brand', sluggable_id: 43 } }
-
-        subject.perform(match, rack_env).should eq('/products?brand_ids%5B%5D=42&brand_ids%5B%5D=43&color_ids%5B%5D=42&color_ids%5B%5D=43&color_ids%5B%5D=44&product_category_ids%5B%5D=42&product_category_ids%5B%5D=43')
-      end
-    end
-
   end
 
+  context 'handle SEO urls like /fashion-items/slug1-slug2/red-green-colored-from-nike-or-red-mountain' do
+    let(:opts) do
+      {
+        target: 'products',
+        url_parts: [{static: 'fashion-items'},
+                    {suffix: '', separator: '-'},
+                    {
+                      groups: [
+                        {suffix: '-colored', separator: '-'},
+                        {prefix: 'from-', separator: '-or-'}
+                      ]
+                    }
+                   ]
+      }
+    end
+    let(:match) { ['', 'tops-shirts', 'blue-red-darkgray', 'nike-or-adidas'] }
+
+    before :each do
+      subject.stub(:find_sluggable).with('tops-shirts'){ { sluggable_type: 'product_category', sluggable_id: 42 } }
+      subject.stub(:find_sluggable).with('blue'){ { sluggable_type: 'color', sluggable_id: 42 } }
+      subject.stub(:find_sluggable).with('red'){ { sluggable_type: 'color', sluggable_id: 43 } }
+      subject.stub(:find_sluggable).with('darkgray'){ { sluggable_type: 'color', sluggable_id: 44 } }
+      subject.stub(:find_sluggable).with('nike'){ { sluggable_type: 'brand', sluggable_id: 42 } }
+      subject.stub(:find_sluggable).with('adidas'){ { sluggable_type: 'brand', sluggable_id: 43 } }
+    end
+
+    it 'should apply rewrite' do
+      base.should_receive(:rewrite).with(/^\/(fashion-items)\/?(?<slug_groups>[^\/]+)?-?\/?((?<slug_groups>[^\/]+)-colored)?-?(from-(?<slug_groups>[^\/]+))?-?/, anything)
+      subject.apply_rewrite(base)
+    end
+
+    it 'should perform the rewrite' do
+      subject.perform(match, rack_env).should eq('/products?brand_ids%5B%5D=42&brand_ids%5B%5D=43&color_ids%5B%5D=42&color_ids%5B%5D=43&color_ids%5B%5D=44&product_category_ids%5B%5D=42')
+    end
+
+    it 'should perform the rewrite even if some of the slug groups are missing' do
+      match = ['', 'tops-shirts', 'blue-red-darkgray']
+
+      subject.perform(match, rack_env).should eq('/products?color_ids%5B%5D=42&color_ids%5B%5D=43&color_ids%5B%5D=44&product_category_ids%5B%5D=42')
+    end
+
+
+  end
 end
 
