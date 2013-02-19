@@ -1,3 +1,4 @@
+require 'uri'
 module Rack
   class Rewrite
     module Dynamic
@@ -30,6 +31,12 @@ module Rack
         end
         def slug_klass
           @slug_klass ||= @opts[:slug_name].constantize
+          # FIXME: remove rails coupling
+          if Rails.env.development?
+            @opts[:slug_name].constantize
+          else
+            @slug_klass
+          end
         end
         def route_generator_klass
           @route_generator_klass ||= @opts[:route_generator_name].constantize
@@ -38,11 +45,16 @@ module Rack
           if slug
             route_generator_klass.route_for slug
           else
-            rack_env['REQUEST_URI'] || rack_env['PATH_INFO']
+            original_path(rack_env)
           end
         end
         def original_path(rack_env)
-          rack_env['REQUEST_URI'] || rack_env['PATH_INFO']
+          if rack_env['REQUEST_URI']
+            uri = URI.parse(rack_env['REQUEST_URI'])
+            "#{uri.path}#{'?'+uri.query if uri.query}"
+          else
+            rack_env['PATH_INFO']
+          end
         end
       end
     end
