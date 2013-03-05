@@ -35,8 +35,9 @@ module Rack
               'static'
             end
           end
+          slugs.reject!{|s| s == 'static'}
           if !slugs.include?(nil)
-            slug_path_if_present(slugs[url_parts.length-1], rack_env)
+            slug_path_if_present(slugs[url_parts.reject{|k, v| v == 'static' }.length-1], rack_env)
           else
             nil
           end

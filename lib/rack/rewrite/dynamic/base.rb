@@ -23,6 +23,8 @@ module Rack
         def scoped_slug_type?(slug_name, slug_type, prev_slug)
           association_name = slug_type.downcase.pluralize
           prev_slug.sluggable.send(association_name).find(slug_name) if prev_slug
+        rescue
+          nil
         end
         def find_sluggable(friendly_id)
           slug_klass.find(friendly_id)
