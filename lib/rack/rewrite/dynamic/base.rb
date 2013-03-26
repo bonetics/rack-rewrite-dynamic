@@ -43,9 +43,9 @@ module Rack
         def route_generator_klass
           @route_generator_klass ||= @opts[:route_generator_name].constantize
         end
-        def slug_path_if_present(slug, rack_env)
+        def slug_path_if_present(slug, rack_env, opts={})
           if slug
-            route_generator_klass.route_for slug
+            route_generator_klass.route_for slug, opts
           else
             original_path(rack_env)
           end

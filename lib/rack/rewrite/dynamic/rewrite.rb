@@ -37,13 +37,20 @@ module Rack
           end
           slugs.reject!{|s| s == 'static'}
           if !slugs.include?(nil)
-            slug_path_if_present(slugs[url_parts.reject{|k, v| v == 'static' }.length-1], rack_env)
+            slug_path_if_present(slugs[url_parts.reject{|k, v| v == 'static' }.length-1], rack_env, static: static_match(url_parts, match))
           else
             nil
           end
         end
 
         private
+          def static_match(url_parts, match)
+            static_index = url_parts.values.index('static')
+            if static_index
+              match[static_index+1]
+            end
+          end
+
           def build_match_string
             match_string = "^\/"
             match_string << @opts[:url_parts].first.map do |url_value, url_type|
