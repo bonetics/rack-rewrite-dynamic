@@ -6,8 +6,11 @@ module Rack
     module Dynamic
       class Rewrites
         attr_reader :rewrites
-        def initialize &rewrite_block
-          instance_eval(&rewrite_block) if block_given?
+        def initialize (base, &rewrite_block)
+          if block_given?
+            instance_eval(&rewrite_block)
+            apply_rewrites(base)
+          end
         end
 
         def rewrite_filter(opts = {})
