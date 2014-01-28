@@ -42,7 +42,9 @@ describe Rack::Rewrite::Dynamic::FilterRewrite do
     let(:match) { ['', 'business-', 'red-darkblue', 'nike-and-red-mountain'] }
 
     it 'should apply rewrite' do
-      base.should_receive(:rewrite).with(/^\/(?<slug_groups>[^\/]+)?-?outfits\/?((?<slug_groups>[^\/]+)-colored)?-?(from-(?<slug_groups>[^\/]+))?-?/, anything)
+      base.should_receive(:rewrite).with do |*args|
+        !args.first.match("/slug1-slug2-outfits/red-green-colored-from-nike-and-red-mountain").nil?
+      end
       subject.apply_rewrite(base)
     end
 
@@ -89,7 +91,9 @@ describe Rack::Rewrite::Dynamic::FilterRewrite do
     end
 
     it 'should apply rewrite' do
-      base.should_receive(:rewrite).with(/^\/(fashion-items)\/?(?<slug_groups>[^\/]+)?-?\/?((?<slug_groups>[^\/]+)-colored)?-?(from-(?<slug_groups>[^\/]+))?-?/, anything)
+      base.should_receive(:rewrite).with do |*args|
+        !args.first.match("/fashion-items/slug1-slug2/red-green-colored-from-nike-or-red-mountain").nil?
+      end
       subject.apply_rewrite(base)
     end
 

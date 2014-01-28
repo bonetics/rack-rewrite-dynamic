@@ -32,13 +32,7 @@ module Rack
           # :)
         end
         def slug_klass
-          @slug_klass ||= @opts[:slug_name].constantize
-          # FIXME: remove rails coupling
-          if Rails.env.development?
-            @opts[:slug_name].constantize
-          else
-            @slug_klass
-          end
+          @opts[:slug_name].constantize
         end
         def route_generator_klass
           @route_generator_klass ||= @opts[:route_generator_name].constantize

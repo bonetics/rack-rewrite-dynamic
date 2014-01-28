@@ -1,6 +1,8 @@
 require_relative '../../../../lib/rack/rewrite/dynamic/rewrites'
 
 describe Rack::Rewrite::Dynamic::Rewrites do
+  let(:base) { stub(:base) }
+  subject { Rack::Rewrite::Dynamic::Rewrites.new(base) }
 
   it 'adds a rewrite' do
     subject.rewrite
